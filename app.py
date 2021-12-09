@@ -10,7 +10,7 @@ from dash import dash_table
 
 app = dash.Dash(__name__)
 df = pd.read_csv('https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-states.csv')
-states = df.state.unique()[::-1]
+states = sorted(df.state.unique())
 
 app.layout = html.Div([
     dcc.Interval(
