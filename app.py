@@ -10,8 +10,8 @@ from dash import dash_table
 
 app = dash.Dash(__name__)
 
-df = pd.read_csv('https://raw.githubusercontent.com/nytimes/covid-19-data/master/live/us-states.csv')
-days = df.date.unique()
+df = pd.read_csv('https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-states.csv')
+days = df.date.unique()[::-1]
 
 app.layout = html.Div([
     dcc.Interval(
@@ -49,5 +49,3 @@ def bar_plot(n_clicks, day):
     return fig
 
 app.run_server(debug=True, host="0.0.0.0")
-
-# add bar chart
