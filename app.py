@@ -16,7 +16,7 @@ days = df.date.unique()[::-1]
 app.layout = html.Div([
     dcc.Interval(
         id='interval-component',
-        interval=100*1000,
+        interval=1*1000,
         n_intervals=0
     ),
      
@@ -29,11 +29,10 @@ app.layout = html.Div([
 
     dcc.Graph(id="bar-chart"),
 
-
-    dash_table.DataTable(
-    id='table',
-    columns=[{"name": i, "id": i} for i in df.columns],
-    data=df.to_dict('records'))
+    # dash_table.DataTable(
+    # id='table',
+    # columns=[{"name": i, "id": i} for i in df.columns],
+    # data=df.to_dict('records'))
 
 ])
 
@@ -45,7 +44,7 @@ app.layout = html.Div([
 
 def bar_plot(n_clicks, day):
     mask = df["date"] == day
-    fig = px.bar(df, x="state", y="cases")
+    fig = px.bar(df[mask], x="state", y="cases")
     return fig
 
 app.run_server(debug=True, host="0.0.0.0")
