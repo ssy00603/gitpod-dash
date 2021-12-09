@@ -1,22 +1,53 @@
 import dash
-from dash import dcc # dash core components
-from dash import html
+import pandas as pd
+import plotly.graph_objects as go
+import dash_core_components as dcc
+import dash_html_components as html
+import plotly.express as px
+from dash.dependencies import Input, Output
+from dash import dash_table
+
 
 app = dash.Dash(__name__)
 
-app.layout = html.Div(children=[
-    html.H2(children='Greetings!'),
-    dcc.Graph(
-        id='example-graph',
-        figure={
-            'data': [
-                {'x': [1, 2, 3], 'y': [5, 7, 2], 'type': 'line'},
-            ],
-            'layout': {
-                'title': 'Example Graph'
-            }
-        }
-    )
+df = pd.read_csv('https://raw.githubusercontent.com/nytimes/covid-19-data/master/live/us-states.csv')
+days = df.date.unique()
+
+app.layout = html.Div([
+    dcc.Interval(
+        id='interval-component',
+        interval=100*1000,
+        n_intervals=0
+    ),
+     
+    dcc.Dropdown(
+        id="dropdown",
+        options=[{"label": x, "value": x} for x in days],
+        value=days[0],
+        clearable=False,
+    ),
+
+    dcc.Graph(id="bar-chart"),
+
+
+    dash_table.DataTable(
+    id='table',
+    columns=[{"name": i, "id": i} for i in df.columns],
+    data=df.to_dict('records'))
+
 ])
 
+
+@app.callback(
+    Output('bar-chart', 'figure'),
+    Input('interval-component', 'n_intervals'),
+    [Input("dropdown", "value")])
+
+def bar_plot(n_clicks, day):
+    mask = df["date"] == day
+    fig = px.bar(df, x="state", y="cases")
+    return fig
+
 app.run_server(debug=True, host="0.0.0.0")
+
+# add bar chart
