@@ -148,16 +148,13 @@ def map_vaccine(n):
     fig = px.choropleth(df_state_vaccine,
                         locations='Abbreviation',
                         color='total_vaccinations',
-                        color_continuous_scale='spectral_r',
+                        color_continuous_scale='Teal',
                         hover_name='State',
                         locationmode='USA-states',
                         labels={'total_vaccinations':'Number of Vaccinations'},
                         scope='usa')
-    
-    fig.add_scattergeo(locations=df_state_vaccine['Abbreviation'],
-                        locationmode='USA-states',
-                        text=df_state_vaccine['Abbreviation'],
-                        mode='text')
+
+    fig.update_traces(marker_line_width=0)
 
     fig.update_layout(
         title={'text':'Total Vaccinations by State',
