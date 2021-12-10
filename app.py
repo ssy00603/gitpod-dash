@@ -14,6 +14,15 @@ df = pd.read_csv('https://raw.githubusercontent.com/nytimes/covid-19-data/master
 states = sorted(df.state.unique())
 days = ['last 7 days', 'last 14 days', 'last 30 days']
 
+df_vaccine = pd.read_csv('https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/vaccinations/us_state_vaccinations.csv')
+df_vaccine = df_vaccine[['date', 'location', 'total_vaccinations']]
+df_vaccine = df_vaccine.groupby('location').sum().reset_index()
+
+df_state_code = pd.read_csv('https://raw.githubusercontent.com/jasonong/List-of-US-States/master/states.csv')
+
+df_state_vaccine = df_state_code.merge(df_vaccine, left_on='State', right_on='location')
+df_state_vaccine = df_state_vaccine[['State', 'Abbreviation', 'total_vaccinations']]
+
 app.layout = html.Div([
     html.H2(children="Covid-19 Dashboard"),
 
@@ -51,6 +60,8 @@ app.layout = html.Div([
             dcc.Graph(id="bar-chart-death")
         ])]),
 
+        dcc.Graph(id="map-vaccine")
+
     # html.H4(children="States with Most New Cases Yestarday"),
 
     # dash_table.DataTable(
@@ -67,7 +78,7 @@ app.layout = html.Div([
     Input("dropdown", "value"),
     Input("dropdown-days", "value"))
 
-def bar_plot(n_clicks, states, days):
+def bar_plot_days(n_clicks, states, days):
     df = pd.read_csv('https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-states.csv')
     df['prev_cases'] = df.groupby('state')['cases'].shift().fillna(0)
     df['new cases'] = df['cases'] - df['prev_cases']
@@ -95,7 +106,7 @@ def bar_plot(n_clicks, states, days):
     Output('bar-chart-total', 'figure'),
     Input('interval-component', 'n_intervals'))
 
-def bar_plot(n_clicks):
+def bar_plot_total(n_clicks):
     df = pd.read_csv('https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-states.csv')
     df = df.groupby('date').sum().reset_index()
     
@@ -104,7 +115,6 @@ def bar_plot(n_clicks):
 
     fig.update_layout(
     plot_bgcolor="white",
-    # title="Number of Cases per State",
     xaxis_title="Date",
     yaxis_title="Number of Total Cases"
     )
@@ -116,7 +126,7 @@ def bar_plot(n_clicks):
     Output('bar-chart-death', 'figure'),
     Input('interval-component', 'n_intervals'))
 
-def bar_plot(n_clicks):
+def bar_plot_death(n_clicks):
     df = pd.read_csv('https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-states.csv')
     df = df.groupby('date').sum().reset_index()
     
@@ -125,11 +135,24 @@ def bar_plot(n_clicks):
 
     fig.update_layout(
     plot_bgcolor="white",
-    # title="Number of Cases per State",
     xaxis_title="Date",
     yaxis_title="Number of Death"
     )
 
+    return fig
+
+@app.callback(
+    Output('map-vaccine', 'figure'))
+
+def map_vaccine():
+    fig = px.choropleth(df_state_vaccine,
+                        locations='Abbreviation',
+                        color='total_vaccinations',
+                        color_continuous_scale='spectral_r',
+                        hover_name='State',
+                        locationmode='USA-states',
+                        labels={'total_vaccinations':'Current Total Vaccinations'},
+                        scope='usa')
     return fig
 
 # @app.callback(
