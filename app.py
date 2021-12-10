@@ -14,15 +14,6 @@ df = pd.read_csv('https://raw.githubusercontent.com/nytimes/covid-19-data/master
 states = sorted(df.state.unique())
 days = ['last 7 days', 'last 14 days', 'last 30 days']
 
-df_vaccine = pd.read_csv('https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/vaccinations/us_state_vaccinations.csv')
-df_vaccine = df_vaccine[['date', 'location', 'total_vaccinations']]
-df_vaccine = df_vaccine.groupby('location').sum().reset_index()
-
-df_state_code = pd.read_csv('https://raw.githubusercontent.com/jasonong/List-of-US-States/master/states.csv')
-
-df_state_vaccine = df_state_code.merge(df_vaccine, left_on='State', right_on='location')
-df_state_vaccine = df_state_vaccine[['State', 'Abbreviation', 'total_vaccinations']]
-
 app.layout = html.Div([
     html.H2(children="Covid-19 Dashboard"),
 
@@ -60,12 +51,11 @@ app.layout = html.Div([
             dcc.Graph(id="bar-chart-death")
         ])]),
 
-        dcc.Graph(id="map-vaccine")
-
+        dcc.Graph(id="map-vaccine"),
     # html.H4(children="States with Most New Cases Yestarday"),
 
     # dash_table.DataTable(
-    # id='table',
+    # id='df_state_vaccine',
     # columns=[{"name": i, "id": i} for i in ['state', 'new cases']],
     # data=df.to_dict('records'))
 
@@ -142,17 +132,39 @@ def bar_plot_death(n_clicks):
     return fig
 
 @app.callback(
-    Output('map-vaccine', 'figure'))
+    Output('map-vaccine', 'figure'),
+    Input('interval-component', 'n_intervals'))
 
-def map_vaccine():
+def map_vaccine(n):
+    df_vaccine = pd.read_csv('https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/vaccinations/us_state_vaccinations.csv')
+    df_vaccine = df_vaccine[['date', 'location', 'total_vaccinations']]
+    df_vaccine = df_vaccine.groupby('location').sum().reset_index()
+
+    df_state_code = pd.read_csv('https://raw.githubusercontent.com/jasonong/List-of-US-States/master/states.csv')
+
+    df_state_vaccine = df_state_code.merge(df_vaccine, left_on='State', right_on='location')
+    df_state_vaccine = df_state_vaccine[['State', 'Abbreviation', 'total_vaccinations']]
+
     fig = px.choropleth(df_state_vaccine,
                         locations='Abbreviation',
                         color='total_vaccinations',
                         color_continuous_scale='spectral_r',
                         hover_name='State',
                         locationmode='USA-states',
-                        labels={'total_vaccinations':'Current Total Vaccinations'},
+                        labels={'total_vaccinations':'Number of Vaccinations'},
                         scope='usa')
+    
+    fig.add_scattergeo(locations=df_state_vaccine['Abbreviation'],
+                        locationmode='USA-states',
+                        text=df_state_vaccine['Abbreviation'],
+                        mode='text')
+
+    fig.update_layout(
+        title={'text':'Total Vaccinations by State',
+            'xanchor':'center',
+            'yanchor':'top',
+            'x':0.5})
+
     return fig
 
 # @app.callback(
