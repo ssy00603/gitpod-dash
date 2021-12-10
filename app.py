@@ -13,7 +13,7 @@ df = pd.read_csv('https://raw.githubusercontent.com/nytimes/covid-19-data/master
 states = sorted(df.state.unique())
 
 app.layout = html.Div([
-    html.H2(children="Number of Cases per State"),
+    html.H2(children="Covid-19 Dashboard"),
     dcc.Interval(
         id='interval-component',
         interval=1*1000,
@@ -43,11 +43,19 @@ app.layout = html.Div([
 
 def bar_plot(n_clicks, states):
     df = pd.read_csv('https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-states.csv')
-    df['last_week_cases'] = df['cases'].rolling(7).sum()
-    mask = df["state"] == states
-    df_last_week = df[mask][::-1]
-    fig = px.area(df_last_week, x="date", y="last_week_cases")
-    fig.update_layout(plot_bgcolor="white") 
+    df['prev_cases'] = df.groupby('state')['cases'].shift().fillna(0)
+    df['new cases'] = df['cases'] - df['prev_cases']
+    df_last_30 = df[df["state"] == states].iloc[-1:-31:-1][::-1]
+
+    fig = px.bar(df_last_30, x="date", y="new cases")
+    
+    fig.update_layout(
+    plot_bgcolor="white",
+    # title="Number of Cases per State",
+    xaxis_title="Date",
+    yaxis_title="Number of New Cases"
+    )
+
     return fig
 
 app.run_server(debug=True, host="0.0.0.0")
