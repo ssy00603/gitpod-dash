@@ -10,6 +10,8 @@ from dash import dash_table
 
 
 app = dash.Dash(__name__)
+
+
 df = pd.read_csv('https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-states.csv')
 states = sorted(df.state.unique())
 days = ['last 7 days', 'last 14 days', 'last 30 days']
@@ -182,4 +184,5 @@ def map_vaccine(n):
 
     return fig
 
-app.run_server(debug=True, host="0.0.0.0")
+if __name__ == '__main__':
+    app.run_server(debug=True, host="0.0.0.0")
