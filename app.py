@@ -11,6 +11,7 @@ from dash import dash_table
 
 app = dash.Dash(__name__)
 
+server = app.server
 
 df = pd.read_csv('https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-states.csv')
 states = sorted(df.state.unique())
