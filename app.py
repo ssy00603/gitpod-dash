@@ -63,7 +63,10 @@ app.layout = html.Div([
         ])]),
 
         # Display map
-        dcc.Graph(id="map-vaccine")
+        dcc.Graph(id="map-vaccine"),
+
+        # Display map
+        dcc.Graph(id="map-confirm-case")
 
 ])
 
@@ -184,6 +187,47 @@ def map_vaccine(n):
             'x':0.5})
 
     return fig
+
+
+@app.callback(
+    Output('map-confirm-case', 'figure'),
+    Input('interval-component', 'n_intervals'))
+
+def map_confirm_case(n):
+    df_state_code = pd.read_csv('https://raw.githubusercontent.com/jasonong/List-of-US-States/master/states.csv')
+    df = pd.read_csv('https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-states.csv')
+    df_confirm_case = df.merge(df_state_code, left_on='state', right_on='State')[['date', 'Abbreviation', 'cases']]
+    yesterday = datetime.date.today() - datetime.timedelta(days=1)
+    df_confirm_case = df_confirm_case[df_confirm_case['date'] == str(yesterday)]
+
+    # Plot map
+    fig = px.choropleth(df_confirm_case,
+                        locations='Abbreviation',
+                        color='cases',
+                        color_continuous_scale='amp',
+                        hover_name='Abbreviation',
+                        locationmode='USA-states',
+                        labels={'cases':'Number of Confirmed Cases'},
+                        scope='usa')
+
+    # Hide line between states
+    fig.update_traces(marker_line_width=0)
+
+    # Add State abbreviation
+    fig.add_scattergeo(locations=df_confirm_case['Abbreviation'],
+                        locationmode='USA-states',
+                        text=df_confirm_case['Abbreviation'],
+                        mode='text',
+                        hoverinfo='none')
+
+    fig.update_layout(
+        title={'text':'Total Confirmed Cases by State',
+            'xanchor':'center',
+            'yanchor':'top',
+            'x':0.5})
+    
+    return fig
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
